@@ -1,0 +1,188 @@
+#include <FastLED.h>
+
+#define PIN      6
+#define NUM_LEDS 4
+#define BRIGHTNESS 255
+
+CRGB leds[NUM_LEDS];
+
+// ============ EFFECTS ============
+
+void chaser(CRGB color, int wait) {
+  for(int i = 0; i < NUM_LEDS; i++) {
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    leds[i] = color;
+    FastLED.show();
+    delay(wait);
+  }
+}
+
+void meteorRain(byte red, byte green, byte blue, int wait) {
+  fill_solid(leds, NUM_LEDS, CRGB::Black);
+  for(int i = 0; i < NUM_LEDS + NUM_LEDS; i++) {
+    // fade all leds
+    for(int j = 0; j < NUM_LEDS; j++) {
+      leds[j].fadeToBlackBy(64);
+    }
+    if(i < NUM_LEDS) {
+      leds[i] = CRGB(red, green, blue);
+    }
+    FastLED.show();
+    delay(wait);
+  }
+}
+
+void fireEffect() {
+  for(int i = 0; i < NUM_LEDS; i++) {
+    int flicker = random(150, 255);
+    leds[i] = CRGB(flicker, flicker/4, 0);
+  }
+  FastLED.show();
+  delay(random(50, 100));
+}
+
+void colorWave(int wait) {
+  static uint8_t hue = 0;
+  for(int i = 0; i < NUM_LEDS; i++) {
+    leds[i] = CHSV(hue + (i * 64), 255, 255);
+  }
+  FastLED.show();
+  hue++;
+  delay(wait);
+}
+
+void twinkle(int wait) {
+  fill_solid(leds, NUM_LEDS, CRGB::Black);
+  int pos = random(NUM_LEDS);
+  leds[pos] = CHSV(random(255), 255, 255);
+  FastLED.show();
+  delay(wait);
+}
+
+void bouncingBall(CRGB color, int wait) {
+  // forward
+  for(int i = 0; i < NUM_LEDS; i++) {
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    leds[i] = color;
+    if(i > 0) leds[i-1] = color;  // tail
+    FastLED.show();
+    delay(wait);
+  }
+  // backward
+  for(int i = NUM_LEDS-1; i >= 0; i--) {
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    leds[i] = color;
+    if(i < NUM_LEDS-1) leds[i+1] = color;  // tail
+    FastLED.show();
+    delay(wait);
+  }
+}
+
+void strobe(CRGB color, int flashes, int wait) {
+  for(int i = 0; i < flashes; i++) {
+    fill_solid(leds, NUM_LEDS, color);
+    FastLED.show();
+    delay(wait);
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    FastLED.show();
+    delay(wait);
+  }
+}
+
+void pulseBreath(CRGB color) {
+  // fade in
+  for(int b = 0; b < 255; b++) {
+    fill_solid(leds, NUM_LEDS, color);
+    FastLED.setBrightness(b);
+    FastLED.show();
+    delay(8);
+  }
+  // fade out
+  for(int b = 255; b >= 0; b--) {
+    fill_solid(leds, NUM_LEDS, color);
+    FastLED.setBrightness(b);
+    FastLED.show();
+    delay(8);
+  }
+  FastLED.setBrightness(BRIGHTNESS);
+}
+
+void policeLight(int wait) {
+  // Red flash
+  for(int i = 0; i < 3; i++) {
+    fill_solid(leds, NUM_LEDS, CRGB::Red);
+    FastLED.show();
+    delay(wait);
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    FastLED.show();
+    delay(wait);
+  }
+  // Blue flash
+  for(int i = 0; i < 3; i++) {
+    fill_solid(leds, NUM_LEDS, CRGB::Blue);
+    FastLED.show();
+    delay(wait);
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    FastLED.show();
+    delay(wait);
+  }
+}
+
+void colorFill(int wait) {
+  CRGB colors[] = {CRGB::Red, CRGB::Green, CRGB::Blue, 
+                   CRGB::Yellow, CRGB::Purple, CRGB::Cyan};
+  for(int c = 0; c < 6; c++) {
+    for(int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = colors[c];
+      FastLED.show();
+      delay(wait);
+    }
+  }
+}
+
+// ============ MAIN ============
+
+void setup() {
+  FastLED.addLeds<WS2812B, PIN, GRB>(leds, NUM_LEDS);
+  FastLED.setBrightness(BRIGHTNESS);
+}
+
+void loop() {
+  // 1. Meteor Rain
+  for(int i=0; i<3; i++) meteorRain(255, 50, 0, 80);
+
+  // 2. Fire
+  for(int i=0; i<50; i++) fireEffect();
+
+  // 3. Color Wave
+  for(int i=0; i<100; i++) colorWave(20);
+
+  // 4. Twinkle
+  for(int i=0; i<30; i++) twinkle(100);
+
+  // 5. Bouncing Ball
+  for(int i=0; i<3; i++) bouncingBall(CRGB::Cyan, 80);
+
+  // 6. Strobe
+  strobe(CRGB::White, 10, 50);
+
+  // 7. Breathing
+  pulseBreath(CRGB::Purple);
+  pulseBreath(CRGB::Blue);
+
+  // 8. Police
+  for(int i=0; i<3; i++) policeLight(100);
+
+  // 9. Color Fill
+  colorFill(150);
+
+  // 10. Rainbow Chaser
+  for(int i=0; i<5; i++) {
+    for(int j=0; j<NUM_LEDS; j++) {
+      fill_solid(leds, NUM_LEDS, CRGB::Black);
+      leds[j] = CHSV(j * 64, 255, 255);
+      FastLED.show();
+      delay(80);
+    }
+  }
+}
